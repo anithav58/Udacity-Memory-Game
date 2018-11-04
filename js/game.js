@@ -1,62 +1,16 @@
-let validClassNames = [
-	'fa-diamond',
-	'fa-paper-plane-o',
-	'fa-anchor',
-	'fa-bolt',
-	'fa-cube',
-	'fa-leaf',
-	'fa-bicycle',
-	'fa-bomb',
-];
-let classNames = [...validClassNames, ...validClassNames];
 let game = memoryGame();
 let arrayStack = [];
 
 document.addEventListener('DOMContentLoaded', function() {
-	createMemoryBoard();
+	game.generateMemoryBoard();
+	game.startTimer();
 	document.querySelector('.restart').addEventListener('click', game.restartGame);
 });
-
-function createMemoryBoard() {
-	let classArray = shuffle(classNames);
-	let fragment = document.createDocumentFragment();
-	for (let i = 0; i < classArray.length; i++) {
-		const listElement = document.createElement('li');
-		listElement.classList.add('card');
-		const childElement = document.createElement('i');
-		childElement.classList.add('fa', classArray[i]);
-		listElement.appendChild(childElement);
-		listElement.addEventListener('click', toggleCard);
-		fragment.appendChild(listElement);
-	}
-	let parentElement = document.querySelector('.deck');
-	parentElement.appendChild(fragment);
-}
-
-function shuffle(array) {
-	var currentIndex = array.length,
-		temporaryValue,
-		randomIndex;
-	while (currentIndex !== 0) {
-		randomIndex = Math.floor(Math.random() * currentIndex);
-		currentIndex -= 1;
-		temporaryValue = array[currentIndex];
-		array[currentIndex] = array[randomIndex];
-		array[randomIndex] = temporaryValue;
-	}
-	return array;
-}
-
-//let previousElement = null;
 
 function toggleCard(event) {
 	let currentElement = event.currentTarget;
 	let currentClassList = currentElement.classList;
-	let icons = currentElement.childNodes[0].classList;
-	//console.log( icons);
-
 	if (currentClassList.contains('open')) {
-		//targetElement.classList.toggle('open',targetElement.classList.contains('open'));
 		if (arrayStack[0] != arrayStack[1]) currentClassList.remove('open');
 	} else {
 		currentClassList.add('open');
@@ -64,47 +18,35 @@ function toggleCard(event) {
 			arrayStack.push(currentElement);
 		}
 		if (arrayStack.length > 1) {
-			//if (previousElement != null && previousElement.classList.contains('open')) {
 			if (isMatch()) {
-				//alert('matched');
-				arrayStack[0].classList.add('match');
-				arrayStack[1].classList.add('match');
-				// arrayStack[0].removeEventListener('click', toggleCard);
-				// arrayStack[1].removeEventListener('click', toggleCard);
-				arrayStack = [];
-				if (document.querySelectorAll('.card.open').length === 4) {
+				if (document.querySelectorAll('.card.open').length === game.getCardNames().length) {
 					document.querySelector('.winning-message').classList.remove('hide');
-					document.querySelector('.container').classList.add('hide');
-					let stars = document.querySelectorAll('.fa-star:not(.hide)').length;
+					document.querySelector('.main-container').classList.add('hide');
+					let stars = document.querySelectorAll('.fa-star').length;
 					document.querySelector(
 						'.result-message'
-					).textContent = `With ${game.getMoves()} and ${stars} stars`;
+					).textContent = `With ${game.getMoves()} Moves and ${stars} star rating`;
 					document.querySelector('.start-game').addEventListener('click', function() {
 						document.querySelector('.winning-message').classList.add('hide');
-						document.querySelector('.container').classList.remove('hide');
+						document.querySelector('.main-container').classList.remove('hide');
 						game.restartGame();
 					});
 				}
 			} else {
 				nomatch();
+				arrayStack = [];
 			}
+			game.updateMoveCount();
 		}
-		game.updateMoveCount();
 	}
 	game.updateStarRating();
 }
 
-// function isMatch(ele) {
-// 	let selectElements = document.querySelectorAll(`.open .${[...ele].join('.')}`);
-// 	if (selectElements.length > 1) {
-// 		return true;
-// 	} else {
-// 		return false;
-// 	}
-// }
-
 function isMatch() {
 	if (arrayStack[0].querySelector('.fa').className === arrayStack[1].querySelector('.fa').className) {
+		arrayStack[0].classList.add('match');
+		arrayStack[1].classList.add('match');
+		arrayStack = [];
 		return true;
 	} else {
 		return false;
@@ -112,23 +54,37 @@ function isMatch() {
 }
 
 function nomatch() {
-	//alert('did not match');
 	arrayStack[0].classList.add('nomatch');
 	arrayStack[1].classList.add('nomatch');
-
+	let tempArray = arrayStack; //use tempArray because the functions that follow get executed before this is done.
 	setTimeout(function() {
-		arrayStack[0].classList.remove('nomatch');
-		arrayStack[1].classList.remove('nomatch');
-		arrayStack[0].classList.remove('open');
-		arrayStack[1].classList.remove('open');
-		arrayStack = [];
+		tempArray[0].classList.remove('nomatch');
+		tempArray[1].classList.remove('nomatch');
+		tempArray[0].classList.remove('open');
+		tempArray[1].classList.remove('open');
+		tempArray = [];
 	}, 500);
 }
 
 function memoryGame() {
 	let moves = 0;
-
+	let validClassNames = [
+		'fa-diamond',
+		'fa-paper-plane-o',
+		'fa-anchor',
+		'fa-bolt',
+		'fa-cube',
+		'fa-leaf',
+		'fa-bicycle',
+		'fa-bomb',
+	];
+	let cardNames = [...validClassNames, ...validClassNames];
+	let gameTime = 0;
+	let timer;
 	return {
+		getCardNames: function() {
+			return cardNames;
+		},
 		getMoves: function() {
 			return moves;
 		},
@@ -140,22 +96,62 @@ function memoryGame() {
 		},
 		updateStarRating: function() {
 			if (moves >= 10 && moves < 16) {
-				document.querySelector('.stars .rating-three').classList.add('hide');
+				document.querySelector('.stars .rating-three').classList.toggle('fa-star', false);
+				document.querySelector('.stars .rating-three').classList.toggle('fa-star-o', true);
 			} else if (moves >= 16 && moves <= 30) {
-				document.querySelector('.stars .rating-two').classList.add('hide');
+				document.querySelector('.stars .rating-two').classList.toggle('fa-star', false);
+				document.querySelector('.stars .rating-two').classList.toggle('fa-star-o', true);
 			}
 		},
 		restartGame: function() {
 			moves = 0;
+			arrayStack = [];
 			document.querySelector('.moves').textContent = '0 Moves';
-			document.querySelector('.stars .rating-three').classList.remove('hide');
-			document.querySelector('.stars .rating-two').classList.remove('hide');
-			document.querySelectorAll('.card').forEach(element => {
-				element.removeEventListener('click', toggleCard);
-				element.remove();
+			document.querySelector('.stars .rating-three').classList.toggle('fa-star', true);
+			document.querySelector('.stars .rating-three').classList.toggle('fa-star-o', false);
+			document.querySelector('.stars .rating-two').classList.toggle('fa-star', true);
+			document.querySelector('.stars .rating-two').classList.toggle('fa-star-o', false);
+
+			document.querySelectorAll('.card').forEach(x => {
+				x.classList.remove(...['open', 'match', 'nomatch']);
 			});
-			createMemoryBoard();
-			//shuffle(classNames);
+			game.generateMemoryBoard();
+			gameTime = 0;
+			document.querySelector('.timer').textContent = `0 s`;
+			clearInterval(timer);
+			game.startTimer();
+		},
+		generateMemoryBoard: function() {
+			let parentElement = document.querySelector('.deck');
+			let length = parentElement.children.length;
+			if (length === 0) {
+				game.createMemoryBoard();
+				length = parentElement.children.length;
+			}
+			for (var i = length; i >= 0; i--) {
+				parentElement.appendChild(parentElement.children[(Math.random() * i) | 0]);
+			}
+		},
+		createMemoryBoard: function() {
+			let fragment = document.createDocumentFragment();
+			for (let i = 0; i < cardNames.length; i++) {
+				const listElement = document.createElement('li');
+				listElement.classList.add('card');
+				const childElement = document.createElement('i');
+				childElement.classList.add('fa', cardNames[i]);
+				listElement.appendChild(childElement);
+				listElement.addEventListener('click', toggleCard);
+				fragment.appendChild(listElement);
+			}
+			let parentElement = document.querySelector('.deck');
+			parentElement.appendChild(fragment);
+		},
+		startTimer: function() {
+			timer = setInterval(function() {
+				gameTime++;
+
+				document.querySelector('.timer').textContent = `${gameTime} s`;
+			}, 1000);
 		},
 	};
 }
