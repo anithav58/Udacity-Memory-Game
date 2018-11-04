@@ -1,5 +1,5 @@
 let game = memoryGame();
-let arrayStack = [];
+let arrayStack = []; //to track the previous and current element
 
 document.addEventListener('DOMContentLoaded', function() {
 	game.generateMemoryBoard();
@@ -103,6 +103,7 @@ function memoryGame() {
 				document.querySelector('.stars .rating-two').classList.toggle('fa-star-o', true);
 			}
 		},
+		//reset moves, star rating, reset cards in the deck, re-shuffle the deck of cards, clear and start timer
 		restartGame: function() {
 			moves = 0;
 			arrayStack = [];
@@ -111,7 +112,6 @@ function memoryGame() {
 			document.querySelector('.stars .rating-three').classList.toggle('fa-star-o', false);
 			document.querySelector('.stars .rating-two').classList.toggle('fa-star', true);
 			document.querySelector('.stars .rating-two').classList.toggle('fa-star-o', false);
-
 			document.querySelectorAll('.card').forEach(x => {
 				x.classList.remove(...['open', 'match', 'nomatch']);
 			});
@@ -121,6 +121,7 @@ function memoryGame() {
 			clearInterval(timer);
 			game.startTimer();
 		},
+		//shuffle the cards radomly
 		generateMemoryBoard: function() {
 			let parentElement = document.querySelector('.deck');
 			let length = parentElement.children.length;
@@ -128,10 +129,11 @@ function memoryGame() {
 				game.createMemoryBoard();
 				length = parentElement.children.length;
 			}
-			for (var i = length; i >= 0; i--) {
+			for (let i = length; i >= 0; i--) {
 				parentElement.appendChild(parentElement.children[(Math.random() * i) | 0]);
 			}
 		},
+		//create the deck of cards, add event listeners, and append to the DOM
 		createMemoryBoard: function() {
 			let fragment = document.createDocumentFragment();
 			for (let i = 0; i < cardNames.length; i++) {
