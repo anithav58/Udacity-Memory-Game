@@ -18,6 +18,7 @@ function toggleCard(event) {
 			arrayStack.push(currentElement);
 		}
 		if (arrayStack.length > 1) {
+			game.updateMoveCount();
 			if (isMatch()) {
 				if (document.querySelectorAll('.card.open').length === game.getCardNames().length) {
 					document.querySelector('.winning-message').classList.remove('hide');
@@ -25,7 +26,7 @@ function toggleCard(event) {
 					let stars = document.querySelectorAll('.fa-star').length;
 					document.querySelector(
 						'.result-message'
-					).textContent = `With ${game.getMoves()} Moves and ${stars} star rating`;
+					).textContent = `In ${game.getTimer()} seconds with ${game.getMoves()} Moves and ${stars} star rating`;
 					document.querySelector('.start-game').addEventListener('click', function() {
 						document.querySelector('.winning-message').classList.add('hide');
 						document.querySelector('.main-container').classList.remove('hide');
@@ -36,7 +37,6 @@ function toggleCard(event) {
 				nomatch();
 				arrayStack = [];
 			}
-			game.updateMoveCount();
 		}
 	}
 	game.updateStarRating();
@@ -87,6 +87,9 @@ function memoryGame() {
 		},
 		getMoves: function() {
 			return moves;
+		},
+		getTimer: function() {
+			return gameTime;
 		},
 		updateMoveCount: function() {
 			moves++;
